@@ -1,0 +1,3 @@
+DROP INDEX IF EXISTS idx_users_email;
+
+ALTER TABLE users DROP CONSTRAINT IF EXISTS unique_email;

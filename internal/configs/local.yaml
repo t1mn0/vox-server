@@ -1,3 +1,9 @@
-env : "local"
-address : "0.0.0.0:8085"
-database_url : "postgres://timno:pass@localhost:5432/postgres?sslmode=disable"
+env: local
+address: :8085
+db:
+  host: localhost
+  port: 5432
+  user: timno
+  password: pass
+  name: gitserver
+  test_name: gitserver_test

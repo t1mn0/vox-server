@@ -28,7 +28,7 @@ type Config struct {
 }
 
 // TODO : change initialization configPath
-var configPath string = "/home/timno/Documents/GoProjects/git-server/internal/configs/local.yaml"
+var configPath string = "/home/timno/Documents/GoProjects/vox-server/internal/configs/local.yaml"
 
 func NewConfig() (*Config, error) {
 	cfg := &Config{}

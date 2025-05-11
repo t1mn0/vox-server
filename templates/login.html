@@ -1,0 +1,40 @@
+{{define "login.html"}}
+<div class="auth-container login-container">
+    <h2 class="text-center mb-4">Sign In</h2>
+    <form id="loginForm">
+        <div class="mb-3">
+            <label for="loginOrEmail" class="form-label">Login or Email</label>
+            <input type="text" class="form-control" id="loginOrEmail" name="loginOrEmail" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Sign In</button>
+        <div class="text-center mt-3">
+            Don't have an account? <a href="/register">Register</a>
+        </div>
+    </form>
+</div>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const response = await fetch('/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            login_or_email: e.target.loginOrEmail.value,
+            password: e.target.password.value
+        })
+    });
+    if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('accessToken', data.access_token);
+        localStorage.setItem('refreshToken', data.refresh_token);
+        window.location.href = '/';
+    } else {
+        alert('Login failed');
+    }
+});
+</script>
+{{end}}

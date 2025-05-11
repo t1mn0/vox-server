@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"log/slog"
 	"net/http"
@@ -29,10 +30,11 @@ const (
 )
 
 type Server struct {
-	config  *Config
-	logger  *slog.Logger
-	router  *mux.Router
-	storage storage.Storage
+	config    *Config
+	logger    *slog.Logger
+	router    *mux.Router
+	storage   storage.Storage
+	templates *template.Template
 }
 
 func initDB(database_url string) (*sql.DB, error) {
@@ -65,11 +67,13 @@ func NewServerWithDB(config *Config, useTestDB bool) (*Server, error) {
 		return nil, err
 	}
 
+	templates := template.Must(template.ParseGlob("templates/*.html"))
 	s := Server{
-		config:  config,
-		logger:  log,
-		router:  mux.NewRouter(),
-		storage: postgres_storage.NewDBStorage(db),
+		config:    config,
+		logger:    log,
+		router:    mux.NewRouter(),
+		storage:   postgres_storage.NewDBStorage(db),
+		templates: templates,
 	}
 
 	s.configureRouter()
@@ -99,6 +103,15 @@ func (server *Server) configureRouter() {
 	server.router.Use(server.setRequestID)
 	server.router.Use(server.logRequest)
 	server.router.Use(handlers.CORS(handlers.AllowedOrigins([]string{"*"}))) // any domain can make requests to your server
+
+	server.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/",
+		http.FileServer(http.Dir("./static"))))
+
+	// HTML routes
+	server.router.HandleFunc("/login", server.handleLoginPage()).Methods("GET")
+	server.router.HandleFunc("/register", server.handleRegisterPage()).Methods("GET")
+
+	// API routes
 	server.router.HandleFunc("/users", server.handleUsersCreate()).Methods("POST")
 	server.router.HandleFunc("/sessions", server.handleSessionsCreate()).Methods("POST")
 
@@ -307,6 +320,24 @@ func (server *Server) handleSessionsCreate() http.HandlerFunc {
 		}
 
 		server.respond(w, r, http.StatusOK, response)
+	}
+}
+
+func (s *Server) handleLoginPage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s.templates.ExecuteTemplate(w, "base.html", map[string]interface{}{
+			"title":    "Login",
+			"formType": "login",
+		})
+	}
+}
+
+func (s *Server) handleRegisterPage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s.templates.ExecuteTemplate(w, "base.html", map[string]interface{}{
+			"title":    "Register",
+			"formType": "register",
+		})
 	}
 }
 
